@@ -9,7 +9,7 @@ django.setup()
 from films.models import Film, Category, Favorite, Rating, Comment, WatchHistory
 from django.contrib.auth.models import User
 
-# Słownik z prawdziwymi plakatami z bazy TMDB
+# Plakaty z bazy TMDB dla filmów
 POSTER_URLS = {
     'incepcja.jpg': 'https://image.tmdb.org/t/p/w500/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg',
     'mroczny_rycerz.jpg': 'https://image.tmdb.org/t/p/w500/1hRoyzDtpgMU7Dz4JF22RANzQO7.jpg',
@@ -24,14 +24,14 @@ def download_and_compress_poster(url, filename):
     filepath = os.path.join(posters_dir, filename)
     
     if os.path.exists(filepath):
-        print(f" -> Plakat {filename} już istnieje lokalnie. Pomijam pobieranie.")
+        print(f" -> Plakat {filename} już jest pobrany. Pomijam.")
         return f"posters/{filename}"
         
     try:
-        print(f"Pobieranie plakatu do: {filename}...")
+        print(f"Pobieranie plakatu: {filename}...")
         temp_filepath = filepath + '.tmp'
         
-        # Pobranie nagłówków User-Agent, aby uniknąć ewentualnego blokowania (403)
+        # Nagłówek User-Agent żeby nas nie zablokowało (błąd 403)
         req = urllib.request.Request(
             url, 
             headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
@@ -39,29 +39,29 @@ def download_and_compress_poster(url, filename):
         with urllib.request.urlopen(req) as response, open(temp_filepath, 'wb') as out_file:
             out_file.write(response.read())
         
-        # Otwarcie pliku przez Pillow i kompresja do JPEG
+        # Zapis i kompresja za pomocą Pillow do JPG
         with Image.open(temp_filepath) as img:
             if img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
-            # Kompresujemy z jakością 80% dla szybszego ładowania
+            # Lżejszy plik (80% jakości)
             img.save(filepath, "JPEG", quality=80, optimize=True)
             
         if os.path.exists(temp_filepath):
             os.remove(temp_filepath)
             
         size_kb = os.path.getsize(filepath) // 1024
-        print(f" -> Zapisano i skompresowano: {filepath} ({size_kb} KB)")
+        print(f" -> Zapisano: {filepath} ({size_kb} KB)")
         return f"posters/{filename}"
     except Exception as e:
         print(f" -> Błąd pobierania {filename}: {e}")
         return None
 
-print("\nPobieranie plakatów filmowych...")
+print("Pobieranie plakatów...")
 posters = {}
 for filename, url in POSTER_URLS.items():
     posters[filename] = download_and_compress_poster(url, filename)
 
-print("\nTworzenie kategorii...")
+print("Kategorie...")
 cat_action, _ = Category.objects.get_or_create(name='Akcja')
 cat_drama, _ = Category.objects.get_or_create(name='Dramat')
 cat_scifi, _ = Category.objects.get_or_create(name='Sci-Fi')
@@ -133,9 +133,9 @@ f5, created = Film.objects.get_or_create(
 if created:
     f5.categories.add(cat_drama, cat_comedy)
 
-print(f'\nSukces! Dodano/zweryfikowano {Film.objects.count()} filmów i {Category.objects.count()} kategorii w bazie danych.')
+print(f'\nDodano/zweryfikowano {Film.objects.count()} filmów i {Category.objects.count()} kategorii.')
 
-print("\nTworzenie użytkowników testowych...")
+print("Użytkownicy...")
 users_data = [
     {'username': 'jan_kowalski', 'email': 'jan@example.com', 'password': 'testpassword123', 'first_name': 'Jan', 'last_name': 'Kowalski'},
     {'username': 'anna_nowak', 'email': 'anna@example.com', 'password': 'testpassword123', 'first_name': 'Anna', 'last_name': 'Nowak'},
@@ -156,12 +156,12 @@ for u_data in users_data:
     if created:
         user.set_password(u_data['password'])
         user.save()
-        print(f" -> Utworzono użytkownika: {user.username}")
+        print(f" -> Dodano użytkownika: {user.username}")
     else:
         print(f" -> Użytkownik {user.username} już istnieje.")
     users[user.username] = user
 
-print("\nDodawanie ocen...")
+print("Oceny...")
 ratings_data = [
     # Incepcja
     ('jan_kowalski', 'Incepcja', 9),
@@ -199,11 +199,11 @@ for username, film_title, score in ratings_data:
             defaults={'score': score}
         )
         if created:
-            print(f" -> {username} ocenił/a '{film_title}' na {score}/10")
+            print(f" -> {username} ocenił '{film_title}' na {score}")
     except Film.DoesNotExist:
         pass
 
-print("\nDodawanie komentarzy...")
+print("Komentarze...")
 comments_data = [
     ('jan_kowalski', 'Incepcja', 'Niesamowity film! Christopher Nolan to geniusz, pomysł ze snem wewnątrz snu wgniata w fotel.'),
     ('anna_nowak', 'Incepcja', 'Jeden z moich ulubionych filmów. Muzyka Hansa Zimmera buduje genialne napięcie.'),
@@ -230,11 +230,11 @@ for username, film_title, content in comments_data:
             content=content
         )
         if created:
-            print(f" -> Dodano komentarz od {username} do filmu '{film_title}'")
+            print(f" -> Dodano komentarz od {username} do '{film_title}'")
     except Film.DoesNotExist:
         pass
 
-print("\nDodawanie filmów do ulubionych...")
+print("Ulubione...")
 favorites_data = [
     ('jan_kowalski', 'Incepcja'),
     ('jan_kowalski', 'Mroczny Rycerz'),
@@ -252,11 +252,11 @@ for username, film_title in favorites_data:
         film = Film.objects.get(title=film_title)
         fav, created = Favorite.objects.get_or_create(user=user, film=film)
         if created:
-            print(f" -> Dodano '{film_title}' do ulubionych użytkownika {username}")
+            print(f" -> Dodano '{film_title}' do ulubionych u {username}")
     except Film.DoesNotExist:
         pass
 
-print("\nDodawanie historii oglądania...")
+print("Historia oglądania...")
 watch_history_data = [
     ('jan_kowalski', 'Incepcja'),
     ('jan_kowalski', 'Mroczny Rycerz'),
@@ -277,9 +277,10 @@ for username, film_title in watch_history_data:
         film = Film.objects.get(title=film_title)
         if not WatchHistory.objects.filter(user=user, film=film).exists():
             WatchHistory.objects.create(user=user, film=film)
-            print(f" -> Zapisano w historii: {username} obejrzał/a '{film_title}'")
+            print(f" -> Zapisano w historii: {username} obejrzał '{film_title}'")
     except Film.DoesNotExist:
         pass
 
-print(f'\nSukces! Baza danych została w pełni zasilona. Użytkownicy: {User.objects.count()}, Komentarze: {Comment.objects.count()}, Oceny: {Rating.objects.count()}')
+print(f'\nGotowe! Baza danych została zasilona. Użytkownicy: {User.objects.count()}, Komentarze: {Comment.objects.count()}, Oceny: {Rating.objects.count()}')
+
 
