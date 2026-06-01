@@ -6,7 +6,8 @@ from PIL import Image
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'streaming.settings')
 django.setup()
 
-from films.models import Film, Category
+from films.models import Film, Category, Favorite, Rating, Comment, WatchHistory
+from django.contrib.auth.models import User
 
 # Słownik z prawdziwymi plakatami z bazy TMDB
 POSTER_URLS = {
@@ -132,5 +133,153 @@ f5, created = Film.objects.get_or_create(
 if created:
     f5.categories.add(cat_drama, cat_comedy)
 
-print(f'\nSukces! Dodano {Film.objects.count()} filmów i {Category.objects.count()} kategorii w bazie danych.')
+print(f'\nSukces! Dodano/zweryfikowano {Film.objects.count()} filmów i {Category.objects.count()} kategorii w bazie danych.')
+
+print("\nTworzenie użytkowników testowych...")
+users_data = [
+    {'username': 'jan_kowalski', 'email': 'jan@example.com', 'password': 'testpassword123', 'first_name': 'Jan', 'last_name': 'Kowalski'},
+    {'username': 'anna_nowak', 'email': 'anna@example.com', 'password': 'testpassword123', 'first_name': 'Anna', 'last_name': 'Nowak'},
+    {'username': 'filmomaniak', 'email': 'filmomaniak@example.com', 'password': 'testpassword123', 'first_name': 'Michał', 'last_name': 'Zieliński'},
+    {'username': 'kino_widz', 'email': 'kinowidz@example.com', 'password': 'testpassword123', 'first_name': 'Katarzyna', 'last_name': 'Wójcik'},
+]
+
+users = {}
+for u_data in users_data:
+    user, created = User.objects.get_or_create(
+        username=u_data['username'],
+        defaults={
+            'email': u_data['email'],
+            'first_name': u_data['first_name'],
+            'last_name': u_data['last_name'],
+        }
+    )
+    if created:
+        user.set_password(u_data['password'])
+        user.save()
+        print(f" -> Utworzono użytkownika: {user.username}")
+    else:
+        print(f" -> Użytkownik {user.username} już istnieje.")
+    users[user.username] = user
+
+print("\nDodawanie ocen...")
+ratings_data = [
+    # Incepcja
+    ('jan_kowalski', 'Incepcja', 9),
+    ('anna_nowak', 'Incepcja', 10),
+    ('filmomaniak', 'Incepcja', 9),
+    ('kino_widz', 'Incepcja', 8),
+    
+    # Mroczny Rycerz
+    ('jan_kowalski', 'Mroczny Rycerz', 10),
+    ('anna_nowak', 'Mroczny Rycerz', 9),
+    ('filmomaniak', 'Mroczny Rycerz', 10),
+    
+    # Skazani na Shawshank
+    ('jan_kowalski', 'Skazani na Shawshank', 10),
+    ('kino_widz', 'Skazani na Shawshank', 10),
+    
+    # Matrix
+    ('filmomaniak', 'Matrix', 9),
+    ('kino_widz', 'Matrix', 8),
+    ('anna_nowak', 'Matrix', 10),
+    
+    # Forrest Gump
+    ('jan_kowalski', 'Forrest Gump', 9),
+    ('anna_nowak', 'Forrest Gump', 9),
+    ('kino_widz', 'Forrest Gump', 9),
+]
+
+for username, film_title, score in ratings_data:
+    user = users.get(username)
+    try:
+        film = Film.objects.get(title=film_title)
+        rating, created = Rating.objects.get_or_create(
+            user=user,
+            film=film,
+            defaults={'score': score}
+        )
+        if created:
+            print(f" -> {username} ocenił/a '{film_title}' na {score}/10")
+    except Film.DoesNotExist:
+        pass
+
+print("\nDodawanie komentarzy...")
+comments_data = [
+    ('jan_kowalski', 'Incepcja', 'Niesamowity film! Christopher Nolan to geniusz, pomysł ze snem wewnątrz snu wgniata w fotel.'),
+    ('anna_nowak', 'Incepcja', 'Jeden z moich ulubionych filmów. Muzyka Hansa Zimmera buduje genialne napięcie.'),
+    ('filmomaniak', 'Incepcja', 'Świetna gra aktorska Leonardo DiCaprio. Końcówka z bączkiem do dzisiaj pozostawia pole do dyskusji.'),
+    
+    ('jan_kowalski', 'Mroczny Rycerz', 'Najlepsza rola Jokera w historii kina. Heath Ledger zasłużył na tego Oscara jak nikt inny.'),
+    ('filmomaniak', 'Mroczny Rycerz', 'Ten film zrewolucjonizował kino o superbohaterach. Mroczny, dojrzały i trzymający w napięciu do ostatniej sekundy.'),
+    
+    ('kino_widz', 'Skazani na Shawshank', 'Piękna historia o nadziei i przyjaźni. Klasyka kina, którą każdy musi zobaczyć przynajmniej raz w życiu.'),
+    
+    ('filmomaniak', 'Matrix', 'Kamień milowy w efektach specjalnych. Słynny bullet time robi wrażenie nawet po tylu latach. I ta zielona estetyka!'),
+    ('anna_nowak', 'Matrix', 'Wspaniała fabuła dająca do myślenia o otaczającej nas rzeczywistości. Keanu Reeves idealnie pasuje do roli Neo.'),
+    
+    ('kino_widz', 'Forrest Gump', 'Film, który bawi i wzrusza do łez. Tom Hanks w swojej życiowej formie. Życie jest jak pudełko czekoladek!'),
+]
+
+for username, film_title, content in comments_data:
+    user = users.get(username)
+    try:
+        film = Film.objects.get(title=film_title)
+        comment, created = Comment.objects.get_or_create(
+            user=user,
+            film=film,
+            content=content
+        )
+        if created:
+            print(f" -> Dodano komentarz od {username} do filmu '{film_title}'")
+    except Film.DoesNotExist:
+        pass
+
+print("\nDodawanie filmów do ulubionych...")
+favorites_data = [
+    ('jan_kowalski', 'Incepcja'),
+    ('jan_kowalski', 'Mroczny Rycerz'),
+    ('anna_nowak', 'Incepcja'),
+    ('anna_nowak', 'Matrix'),
+    ('filmomaniak', 'Mroczny Rycerz'),
+    ('filmomaniak', 'Matrix'),
+    ('kino_widz', 'Skazani na Shawshank'),
+    ('kino_widz', 'Forrest Gump'),
+]
+
+for username, film_title in favorites_data:
+    user = users.get(username)
+    try:
+        film = Film.objects.get(title=film_title)
+        fav, created = Favorite.objects.get_or_create(user=user, film=film)
+        if created:
+            print(f" -> Dodano '{film_title}' do ulubionych użytkownika {username}")
+    except Film.DoesNotExist:
+        pass
+
+print("\nDodawanie historii oglądania...")
+watch_history_data = [
+    ('jan_kowalski', 'Incepcja'),
+    ('jan_kowalski', 'Mroczny Rycerz'),
+    ('jan_kowalski', 'Forrest Gump'),
+    ('anna_nowak', 'Incepcja'),
+    ('anna_nowak', 'Matrix'),
+    ('filmomaniak', 'Incepcja'),
+    ('filmomaniak', 'Mroczny Rycerz'),
+    ('filmomaniak', 'Matrix'),
+    ('kino_widz', 'Skazani na Shawshank'),
+    ('kino_widz', 'Forrest Gump'),
+    ('kino_widz', 'Incepcja'),
+]
+
+for username, film_title in watch_history_data:
+    user = users.get(username)
+    try:
+        film = Film.objects.get(title=film_title)
+        if not WatchHistory.objects.filter(user=user, film=film).exists():
+            WatchHistory.objects.create(user=user, film=film)
+            print(f" -> Zapisano w historii: {username} obejrzał/a '{film_title}'")
+    except Film.DoesNotExist:
+        pass
+
+print(f'\nSukces! Baza danych została w pełni zasilona. Użytkownicy: {User.objects.count()}, Komentarze: {Comment.objects.count()}, Oceny: {Rating.objects.count()}')
 
