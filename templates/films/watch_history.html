@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Historia ogladania - StreamBox{% endblock %}
+
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-6">Historia ogladania</h1>
+
+<div class="space-y-3">
+    {% for entry in history %}
+    <a href="{% url 'film_detail' entry.film.pk %}" class="flex items-center gap-4 bg-zinc-900 rounded-lg p-3 border border-zinc-800 hover:border-red-500 transition">
+        {% if entry.film.poster %}
+        <img src="{{ entry.film.poster.url }}" alt="{{ entry.film.title }}" class="w-16 h-24 object-cover rounded">
+        {% else %}
+        <div class="w-16 h-24 bg-zinc-800 rounded flex items-center justify-center text-gray-500 text-xs">Brak</div>
+        {% endif %}
+        <div>
+            <h3 class="font-semibold text-white">{{ entry.film.title }}</h3>
+            <p class="text-sm text-gray-400">{{ entry.film.year }} | {{ entry.film.genre }}</p>
+            <p class="text-xs text-gray-500">Ogladane: {{ entry.watched_at|date:"d.m.Y H:i" }}</p>
+        </div>
+    </a>
+    {% empty %}
+    <p class="text-gray-500">Brak historii ogladania.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

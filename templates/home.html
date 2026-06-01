@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}StreamBox - Strona glowna{% endblock %}
+
+{% block content %}
+
+<section class="mb-10">
+    <h1 class="text-2xl font-bold mb-4">Najnowsze filmy</h1>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {% for film in latest_films %}
+        <a href="{% url 'film_detail' film.pk %}" class="group block h-full">
+            <div class="bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 hover:border-red-500 transition duration-300 h-full flex flex-col shadow-lg hover:shadow-red-900/20">
+                <div class="relative overflow-hidden aspect-[2/3]">
+                    {% if film.poster %}
+                    <img src="{{ film.poster.url }}" alt="{{ film.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    {% else %}
+                    <div class="w-full h-full bg-zinc-800 flex items-center justify-center text-gray-500">Brak plakatu</div>
+                    {% endif %}
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span class="bg-red-600 text-white p-4 rounded-full shadow-lg shadow-red-900/50 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                            <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="p-4 flex-1 flex flex-col">
+                    <h3 class="font-semibold text-white group-hover:text-red-400 transition-colors truncate mb-1">{{ film.title }}</h3>
+                    <p class="text-xs text-gray-400 mb-2">{{ film.year }} &bull; {{ film.genre }} &bull; {{ film.duration }} min</p>
+                    
+                    <div class="mt-auto">
+                        {% if film.average_rating > 0 %}
+                        <div class="flex items-center gap-1 text-sm text-yellow-500 font-medium">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                            <span>{{ film.average_rating|floatformat:1 }}</span>
+                            <span class="text-xs text-gray-500 font-normal ml-1">({{ film.rating_count }})</span>
+                        </div>
+                        {% else %}
+                        <div class="text-xs text-gray-600 mt-1">Brak ocen</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <p class="text-gray-500 col-span-full">Brak filmow w bazie.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="mb-10">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Wszystkie filmy</h2>
+        <form action="{% url 'search' %}" method="get" class="md:hidden flex items-center gap-2">
+            <input type="text" name="q" placeholder="Szukaj..."
+                   class="bg-zinc-800 text-white rounded px-3 py-1.5 text-sm border border-zinc-700 focus:border-red-500 focus:outline-none">
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm">Szukaj</button>
+        </form>
+    </div>
+
+    {% if categories %}
+    <div class="flex flex-wrap gap-2 mb-6">
+        {% for category in categories %}
+        <a href="{% url 'search' %}?genre={{ category.name }}"
+           class="bg-zinc-800 text-gray-300 px-3 py-1 rounded-full text-sm hover:bg-red-600 hover:text-white transition">
+            {{ category.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {% for film in all_films %}
+        <a href="{% url 'film_detail' film.pk %}" class="group block h-full">
+            <div class="bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 hover:border-red-500 transition duration-300 h-full flex flex-col shadow-lg hover:shadow-red-900/20">
+                <div class="relative overflow-hidden aspect-[2/3]">
+                    {% if film.poster %}
+                    <img src="{{ film.poster.url }}" alt="{{ film.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    {% else %}
+                    <div class="w-full h-full bg-zinc-800 flex items-center justify-center text-gray-500">Brak plakatu</div>
+                    {% endif %}
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span class="bg-red-600 text-white p-4 rounded-full shadow-lg shadow-red-900/50 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                            <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="p-4 flex-1 flex flex-col">
+                    <h3 class="font-semibold text-white group-hover:text-red-400 transition-colors truncate mb-1">{{ film.title }}</h3>
+                    <p class="text-xs text-gray-400 mb-2">{{ film.year }} &bull; {{ film.genre }}</p>
+                    
+                    <div class="mt-auto">
+                        {% if film.average_rating > 0 %}
+                        <div class="flex items-center gap-1 text-sm text-yellow-500 font-medium">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                            <span>{{ film.average_rating|floatformat:1 }}</span>
+                            <span class="text-xs text-gray-500 font-normal ml-1">({{ film.rating_count }})</span>
+                        </div>
+                        {% else %}
+                        <div class="text-xs text-gray-600 mt-1">Brak ocen</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <p class="text-gray-500 col-span-full">Brak filmow.</p>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}
