@@ -22,6 +22,10 @@ def download_and_compress_poster(url, filename):
     os.makedirs(posters_dir, exist_ok=True)
     filepath = os.path.join(posters_dir, filename)
     
+    if os.path.exists(filepath):
+        print(f" -> Plakat {filename} już istnieje lokalnie. Pomijam pobieranie.")
+        return f"posters/{filename}"
+        
     try:
         print(f"Pobieranie plakatu do: {filename}...")
         temp_filepath = filepath + '.tmp'
@@ -51,71 +55,82 @@ def download_and_compress_poster(url, filename):
         print(f" -> Błąd pobierania {filename}: {e}")
         return None
 
-print("Czyszczenie bazy danych...")
-Film.objects.all().delete()
-Category.objects.all().delete()
-
 print("\nPobieranie plakatów filmowych...")
 posters = {}
 for filename, url in POSTER_URLS.items():
     posters[filename] = download_and_compress_poster(url, filename)
 
 print("\nTworzenie kategorii...")
-cat_action = Category.objects.create(name='Akcja')
-cat_drama = Category.objects.create(name='Dramat')
-cat_scifi = Category.objects.create(name='Sci-Fi')
-cat_comedy = Category.objects.create(name='Komedia')
+cat_action, _ = Category.objects.get_or_create(name='Akcja')
+cat_drama, _ = Category.objects.get_or_create(name='Dramat')
+cat_scifi, _ = Category.objects.get_or_create(name='Sci-Fi')
+cat_comedy, _ = Category.objects.get_or_create(name='Komedia')
 
 print("Tworzenie filmów...")
-f1 = Film.objects.create(
+f1, created = Film.objects.get_or_create(
     title='Incepcja',
-    description='Złodziej, który kradnie sekrety korporacyjne za pomocą technologii dzielenia snów, dostaje odwrotne zadanie - zaszczepienie idei w umyśle prezesa firmy.',
-    year=2010,
-    genre='Sci-Fi',
-    duration=148,
-    poster=posters.get('incepcja.jpg'),
+    defaults={
+        'description': 'Złodziej, który kradnie sekrety korporacyjne za pomocą technologii dzielenia snów, dostaje odwrotne zadanie - zaszczepienie idei w umyśle prezesa firmy.',
+        'year': 2010,
+        'genre': 'Sci-Fi',
+        'duration': 148,
+        'poster': posters.get('incepcja.jpg'),
+    }
 )
-f1.categories.add(cat_scifi, cat_action)
+if created:
+    f1.categories.add(cat_scifi, cat_action)
 
-f2 = Film.objects.create(
+f2, created = Film.objects.get_or_create(
     title='Mroczny Rycerz',
-    description='Batman musi zaakceptować jedną z największych prób psychologicznych i fizycznych, aby walczyć z niesprawiedliwością w Gotham City.',
-    year=2008,
-    genre='Akcja',
-    duration=152,
-    poster=posters.get('mroczny_rycerz.jpg'),
+    defaults={
+        'description': 'Batman musi zaakceptować jedną z największych prób psychologicznych i fizycznych, aby walczyć z niesprawiedliwością w Gotham City.',
+        'year': 2008,
+        'genre': 'Akcja',
+        'duration': 152,
+        'poster': posters.get('mroczny_rycerz.jpg'),
+    }
 )
-f2.categories.add(cat_action, cat_drama)
+if created:
+    f2.categories.add(cat_action, cat_drama)
 
-f3 = Film.objects.create(
+f3, created = Film.objects.get_or_create(
     title='Skazani na Shawshank',
-    description='Dwóch uwięzionych mężczyzn łączy się przez lata, znajdując pocieszenie i odkupienie poprzez akty zwykłej przyzwoitości.',
-    year=1994,
-    genre='Dramat',
-    duration=142,
-    poster=posters.get('skazani_na_shawshank.jpg'),
+    defaults={
+        'description': 'Dwóch uwięzionych mężczyzn łączy się przez lata, znajdując pocieszenie i odkupienie poprzez akty zwykłej przyzwoitości.',
+        'year': 1994,
+        'genre': 'Dramat',
+        'duration': 142,
+        'poster': posters.get('skazani_na_shawshank.jpg'),
+    }
 )
-f3.categories.add(cat_drama)
+if created:
+    f3.categories.add(cat_drama)
 
-f4 = Film.objects.create(
+f4, created = Film.objects.get_or_create(
     title='Matrix',
-    description='Haker komputerowy dowiaduje się od tajemniczych buntowników o prawdziwej naturze swojej rzeczywistości i o swojej roli w wojnie z jej kontrolerami.',
-    year=1999,
-    genre='Sci-Fi',
-    duration=136,
-    poster=posters.get('matrix.jpg'),
+    defaults={
+        'description': 'Haker komputerowy dowiaduje się od tajemniczych buntowników o prawdziwej naturze swojej rzeczywistości i o swojej roli w wojnie z jej kontrolerami.',
+        'year': 1999,
+        'genre': 'Sci-Fi',
+        'duration': 136,
+        'poster': posters.get('matrix.jpg'),
+    }
 )
-f4.categories.add(cat_scifi, cat_action)
+if created:
+    f4.categories.add(cat_scifi, cat_action)
 
-f5 = Film.objects.create(
+f5, created = Film.objects.get_or_create(
     title='Forrest Gump',
-    description='Prezydentury Kennedy\'ego i Johnsona, wojna w Wietnamie, afera Watergate i inne wydarzenia historyczne rozwijają się z perspektywy człowieka z Alabamy o IQ 75.',
-    year=1994,
-    genre='Dramat',
-    duration=142,
-    poster=posters.get('forrest_gump.jpg'),
+    defaults={
+        'description': 'Prezydentury Kennedy\'ego i Johnsona, wojna w Wietnamie, afera Watergate i inne wydarzenia historyczne rozwijają się z perspektywy człowieka z Alabamy o IQ 75.',
+        'year': 1994,
+        'genre': 'Dramat',
+        'duration': 142,
+        'poster': posters.get('forrest_gump.jpg'),
+    }
 )
-f5.categories.add(cat_drama, cat_comedy)
+if created:
+    f5.categories.add(cat_drama, cat_comedy)
 
 print(f'\nSukces! Dodano {Film.objects.count()} filmów i {Category.objects.count()} kategorii w bazie danych.')
 

@@ -13,3 +13,6 @@ python manage.py collectstatic --no-input
 
 # Uruchom migracje bazy danych
 python manage.py migrate
+
+# Uruchom seedowanie bazy danych (filmy i kategorie)
+python seed_data.py
