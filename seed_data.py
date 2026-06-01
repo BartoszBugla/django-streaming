@@ -136,6 +136,13 @@ if created:
 print(f'\nDodano/zweryfikowano {Film.objects.count()} filmów i {Category.objects.count()} kategorii.')
 
 print("Użytkownicy...")
+# Dodanie konta administratora (superużytkownika) do panelu admina
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
+    print(" -> Dodano administratora: admin")
+else:
+    print(" -> Administrator admin już istnieje.")
+
 users_data = [
     {'username': 'jan_kowalski', 'email': 'jan@example.com', 'password': 'testpassword123', 'first_name': 'Jan', 'last_name': 'Kowalski'},
     {'username': 'anna_nowak', 'email': 'anna@example.com', 'password': 'testpassword123', 'first_name': 'Anna', 'last_name': 'Nowak'},
